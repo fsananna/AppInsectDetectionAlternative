@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "436242976357",
+    "project_id": "insectdetection-c56d4",
+    "storage_bucket": "insectdetection-c56d4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:436242976357:android:48de220a00f1530cbb408c",
+        "android_client_info": {
+          "package_name": "com.example.insectdetection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArxjuY2Oub_3maBnr3SJogdyjdFP827Q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

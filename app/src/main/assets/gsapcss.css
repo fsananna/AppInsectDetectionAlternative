@@ -1,0 +1,54 @@
+.circle {
+    width: 100px;
+    height: 100px;
+    background-color: rgb(219, 230, 14);
+    border-radius: 50px;
+    position: absolute;
+    left: 0;
+    top: 60%;
+    transform: translateY(-50%);
+  }
+  .boddy{
+    background-color: rgb(1, 30, 43);
+  }
+  #position{
+    margin-top: 400px;
+  }
+  h1{
+    padding-top: 40px;
+    margin-left: 20px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  }
+  #svg {
+    align-content: end;
+    bottom: -30%; /* Set the bottom position to 0 */
+    left: 50%; /* Set the left position to 50% */
+    transform: translateX(-50%); /* Use transform to horizontally center the element */
+    width: 393px; /* Set the desired width */
+    height: 851px; /* Set the desired height */
+    
+
+        bottom: 0;
+        right: 0;
+    
+}
+
+  
+  #path1 {
+    fill: #19fe00;
+
+   
+  }
+  
+  #path2 {
+    fill: #0832ee;
+  }
+  
+  .controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 15px;
+  }
+  
+  
