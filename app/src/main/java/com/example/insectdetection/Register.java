@@ -29,7 +29,7 @@ import java.util.Map;
 
 public class Register extends AppCompatActivity implements View.OnClickListener {
 
-    EditText editTextEmail, editTextPassword, editTextCountry ,editTextUserName;
+    EditText editTextEmail, editTextPassword, editTextCountry, editTextUserName;
     Button buttonReg;
     FirebaseAuth mAuth;
     ProgressBar progressBar;
@@ -44,7 +44,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
     public void onStart() {
         super.onStart();
         currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
+        if (currentUser != null && currentUser.isEmailVerified()) {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
             finish();
@@ -82,7 +82,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
             password = String.valueOf(editTextPassword.getText());
             country = String.valueOf(editTextCountry.getText());
             Dob = String.valueOf(registerDate.getText());
-            userName =String.valueOf(editTextUserName.getText());
+            userName = String.valueOf(editTextUserName.getText());
 
             if (TextUtils.isEmpty(email) || TextUtils.isEmpty(userName) || TextUtils.isEmpty(password) || TextUtils.isEmpty(country) || TextUtils.isEmpty(Dob)) {
                 Toast.makeText(Register.this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
@@ -95,36 +95,42 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
                         if (task.isSuccessful()) {
                             FirebaseUser currentUser = mAuth.getCurrentUser();
 
-
                             currentUser.sendEmailVerification().addOnCompleteListener(emailVerificationTask -> {
+                                Toast.makeText(Register.this, "Verification email sent. Please verify your email address.", Toast.LENGTH_LONG).show();
+
                                 if (emailVerificationTask.isSuccessful()) {
-                                    Toast.makeText(Register.this, "Verification email sent. Please verify your email address.", Toast.LENGTH_LONG).show();
+                                    // Save user data to Realtime Database
+                                    User user = new User(userName, email, country, Dob);
+                                    DatabaseReference usersRef = FirebaseDatabase.getInstance("https://insectdetection-c56d4-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
+
+                                    usersRef.child(currentUser.getUid()).setValue(user)
+                                            .addOnSuccessListener(aVoid -> {
+                                                progressBar.setVisibility(View.GONE);
+                                                Toast.makeText(Register.this, "Account Created.", Toast.LENGTH_SHORT).show();
+
+                                                // Check if email is verified
+                                                if (currentUser.isEmailVerified()) {
+                                                    // Redirect to home page only after email verification
+                                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                                    startActivity(intent);
+                                                    finish();
+                                                } else {
+                                                    Toast.makeText(Register.this, "Please verify your email address.", Toast.LENGTH_SHORT).show();
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                progressBar.setVisibility(View.GONE);
+                                                Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
+                                                Log.e("RealtimeDatabase", "Failed to add user data: " + e.getMessage());
+                                            });
+
                                 } else {
                                     Toast.makeText(Register.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
                                     Log.e("EmailVerification", "Failed to send verification email: " + emailVerificationTask.getException().getMessage());
                                 }
                             });
 
-                            // Save user data to Realtime Database
-                            //dekh bhai dekh
-                            User user = new User(userName,email ,country, Dob);
 
-
-                            DatabaseReference usersRef = FirebaseDatabase.getInstance("https://insectdetection-c56d4-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
-
-                            usersRef.child(currentUser.getUid()).setValue(user)
-                                    .addOnSuccessListener(aVoid -> {
-                                        progressBar.setVisibility(View.GONE);
-                                        Toast.makeText(Register.this, "Account Created.", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        progressBar.setVisibility(View.GONE);
-                                        Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
-                                        Log.e("RealtimeDatabase", "Failed to add user data: " + e.getMessage());
-                                    });
                         } else {
                             progressBar.setVisibility(View.GONE);
                             Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
