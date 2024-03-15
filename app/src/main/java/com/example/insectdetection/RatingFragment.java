@@ -41,6 +41,8 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
     private CommentAdapter commentAdapter;
     private ArrayList<Comments> mCommentList = new ArrayList<>();
     private TextView comment;
+    private DatabaseReference ratingsRef;
+    private TextView averageRatingTextView;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -52,9 +54,16 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         // Initialize Firebase Database
         FirebaseDatabase db = FirebaseDatabase.getInstance("https://insectdetection-c56d4-default-rtdb.asia-southeast1.firebasedatabase.app") ;
         commentsRef = db.getReference("comments");
+        ratingsRef = db.getReference("ratings");
 
         getAllComments();
 
+        // Initialize TextView to display average rating
+        averageRatingTextView = view.findViewById(R.id.average_rating_textview);
+
+
+        // Calculate and display average rating
+        calculateAndDisplayAverageRating();
 
         // RecyclerView setup
         RecyclerView recyclerView = view.findViewById(R.id.RecyclerviewComments);
@@ -92,6 +101,22 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
             @Override
             public void onClick(View v) {
                 float rating = mRating.getRating();
+                // Store the rating in Firebase Realtime Database
+                DatabaseReference ratingsRef = db.getReference("ratings");
+                ratingsRef.push().setValue(rating)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.d("Firebase", "Rating added successfully");
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e("Firebase", "Error adding rating: " + e.getMessage());
+                            }
+                        });
+
                 mThank.setVisibility(View.VISIBLE);
                 mSubmit.setVisibility(View.INVISIBLE);
 
@@ -106,6 +131,31 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         });
 
         return view;
+    }
+
+
+    private void calculateAndDisplayAverageRating() {
+        ratingsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                double totalRating = 0;
+                int ratingCount = 0;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Double rating = snapshot.getValue(Double.class);
+                    if (rating != null) {
+                        totalRating += rating;
+                        ratingCount++;
+                    }
+                }
+                double averageRating = ratingCount > 0 ? totalRating / ratingCount : 0.0;
+                averageRatingTextView.setText("Average Rating: " + String.format("%.1f", averageRating));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle onCancelled event if needed
+            }
+        });
     }
 
     private void listenForCommentUpdates(Consumer<ArrayList<Comments>> callback) {

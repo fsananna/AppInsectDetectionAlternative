@@ -34,10 +34,6 @@
             android:textSize="40dp"
             android:textStyle="bold" />
 
-far
-
-
-
         <EditText
             android:id="@+id/userName"
             android:layout_width="300dp"
@@ -71,27 +67,24 @@ far
             android:inputType="textPassword"
             android:paddingLeft="8dp"
             android:textSize="25sp" />
-        <com.google.android.material.textfield.TextInputLayout
+
+        <!-- Division Spinner -->
+        <Spinner
+            android:id="@+id/divisionSpinner"
             android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            app:boxStrokeWidthFocused="0sp"
-            app:boxStrokeWidth="0sp"
-            android:hint="@string/select_country"
-            android:id="@+id/inputLayout"
-            android:layout_marginStart="25sp"
-            android:layout_marginEnd="25sp"
-            android:layout_centerInParent="true"
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
-            >
+            android:background="#EAE0E0"
+            android:textSize="25sp"
+            android:layout_height="40dp"
+            android:layout_marginBottom="10dp"/>
 
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:layout_width="300dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/inputTV"
-                android:inputType="none"
-                app:simpleItems="@array/options_list" />
-
-        </com.google.android.material.textfield.TextInputLayout>
+        <!-- District Spinner -->
+        <Spinner
+            android:id="@+id/districtSpinner"
+            android:layout_width="300dp"
+            android:background="#EAE0E0"
+            android:textSize="25sp"
+            android:layout_height="40dp"
+            android:layout_marginBottom="10dp"/>
 
         <ProgressBar
             android:id="@+id/progressBar"

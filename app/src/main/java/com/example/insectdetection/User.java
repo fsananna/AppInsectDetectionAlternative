@@ -5,7 +5,8 @@ import androidx.annotation.NonNull;
 public class User {
     private String email;
     private String password;
-    private String country;
+    private String division;
+    private String district;
     private String Dob;
 
     private String userName;
@@ -14,10 +15,11 @@ public class User {
     }
 
     // Parameterized constructor
-    public User(String userName,String email, String country, String dob ) {
+    public User(String userName,String email, String division,String district, String dob ) {
         this.userName= userName;
         this.email = email;
-        this.country = country;
+        this.division = division;
+        this.district = district;
         this.Dob = dob;
 
     }
@@ -48,12 +50,20 @@ public class User {
         this.password = password;
     }
 
-    public String getCountry() {
-        return country;
+    public String getDivision() {
+        return division;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    public void setDivision(String division) {
+        this.division = division;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String division) {
+        this.district = district;
     }
 
     public String getDob() {
@@ -71,7 +81,8 @@ public class User {
         return "User{" +
                 "userName='" + userName + '\'' +
                 ", email='" + email + '\'' +
-                ", country='" + country + '\'' +
+                ", division='" + division + '\'' +
+                ", district='" + district + '\'' +
                 ", dob='" + Dob + '\'' +
                 '}';
     }

@@ -9,7 +9,7 @@
         <item>Thailand</item>
     </string-array>
 
-    <string-array name="array_bangladesh_divisions">
+    <string-array name="array_divisions">
         <item>Select Your Division</item>
         <item>Barisal</item>
         <item>Chittagong</item>
@@ -20,8 +20,17 @@
         <item>Rangpur</item>
         <item>Sylhet</item>
     </string-array>
+    <string-array name="array_districts_barisal">
+        <item>Select Your District</item>
+        <item> Barisal</item>
+        <item>Patuakhali</item>
+        <item>Barguna</item>
+        <item>Pirojpur</item>
+        <item>Bhola</item>
+        <item>Jhalokati </item>
+    </string-array>
 
-    <string-array name="array_chittagong_districts">
+    <string-array name="array_districts_chittagong">
         <item>Select Your District</item>
         <item>Bandarban</item>
         <item>Brahmanbaria</item>
@@ -36,7 +45,7 @@
         <item>Rangamati</item>
     </string-array>
 
-    <string-array name="array_dhaka_districts">
+    <string-array name="array_districts_dhaka">
         <item>Select Your District</item>
         <item>Dhaka</item>
         <item>Faridpur</item>
