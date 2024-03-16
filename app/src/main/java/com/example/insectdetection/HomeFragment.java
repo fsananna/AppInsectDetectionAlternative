@@ -16,10 +16,19 @@ public class HomeFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
 
         ImageButton mapButton = rootView.findViewById(R.id.map_button);
+        ImageButton weatherButton = rootView.findViewById(R.id.weather_button);
+
         mapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 openMapActivity();
+            }
+        });
+
+        weatherButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openWeatherActivity();
             }
         });
 
@@ -28,6 +37,11 @@ public class HomeFragment extends Fragment {
 
     private void openMapActivity() {
         Intent intent = new Intent(requireContext(), Map.class);
+        startActivity(intent);
+    }
+
+    private void openWeatherActivity() {
+        Intent intent = new Intent(requireContext(), Weather.class); // Replace WeatherActivity with the actual name of your Weather activity
         startActivity(intent);
     }
 }

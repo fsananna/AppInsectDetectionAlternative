@@ -16,10 +16,19 @@
             android:id="@+id/map_button"
             android:layout_width="50dp"
             android:layout_height="60dp"
+            android:layout_marginTop="10dp"
             android:src="@drawable/map"
             android:background="?android:attr/selectableItemBackground"
             android:layout_centerInParent="true"
             android:contentDescription="Open Google Maps" />
+        <ImageButton
+            android:id="@+id/weather_button"
+            android:layout_width="60dp"
+            android:layout_height="70dp"
+            android:layout_marginStart="270dp"
+            android:src="@drawable/cloud"
+            android:background="?android:attr/selectableItemBackground"
+             />
 
     </LinearLayout>
 

@@ -1,4 +1,8 @@
 <resources>
+
+    <!-- This is test ad unit ID for Banner ads. Replace this with your Banner ad unit ID.
+    Source: https://developers.google.com/admob/android/banner -->
+    <string name="banner_adunit_id">ca-app-pub-3940256099942544/6300978111</string>
     <string name="app_name">InsectDetection</string>
     <string name="login">Login</string>
     <string name="email">Email</string>
@@ -47,4 +51,8 @@
     <string name="comments">comment\n</string>
     <string name="user_name">username\n</string>
     <string name="image_contentDescription" />
+    <string name="weather_update">Weather Update</string>
+    <string name="enter_city_name">Enter City Name</string>
+    <string name="enter_country_code_optional">Enter Country Code (Optional)</string>
+    <string name="get">Get</string>
 </resources>
