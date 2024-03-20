@@ -37,7 +37,7 @@ public class HomeFragment extends Fragment {
     Button camera, gallery;
     ImageView imageView;
     TextView result;
-    int imageSize = 32;
+    int imageSize = 224;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int CAMERA_REQUEST_CODE = 3;
     private static final int GALLERY_REQUEST_CODE = 1;
@@ -107,7 +107,7 @@ public class HomeFragment extends Fragment {
             Model model = Model.newInstance(requireContext());
 
             // Creates inputs for reference.
-            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 32, 32, 3}, DataType.FLOAT32);
+            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 224, 224, 3}, DataType.FLOAT32);
             ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * imageSize * imageSize * 3);
             byteBuffer.order(ByteOrder.nativeOrder());
 
