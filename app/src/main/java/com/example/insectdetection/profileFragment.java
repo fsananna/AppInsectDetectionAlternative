@@ -1,6 +1,9 @@
 package com.example.insectdetection;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +15,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -20,6 +24,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Objects;
+
 public class profileFragment extends Fragment {
     private FirebaseAuth auth;
     private Button button;
@@ -27,10 +33,8 @@ public class profileFragment extends Fragment {
     private FirebaseUser user;
 
     private ImageView imageView;
-    private FirebaseAuth authProfile;
     FirebaseDatabase db = FirebaseDatabase.getInstance("https://insectdetection-c56d4-default-rtdb.asia-southeast1.firebasedatabase.app/") ;
-
-
+    SharedPreferences sharedPreferences ;
 
 
     @Override
@@ -51,9 +55,14 @@ public class profileFragment extends Fragment {
         districtTextView = view.findViewById(R.id.districtSpinner);
         dobTextView = view.findViewById(R.id.dobId);
         user = auth.getCurrentUser();
+        sharedPreferences= requireActivity().getSharedPreferences("MyPrefs", MODE_PRIVATE);
+
 
         //set OnClickListener on ImageView to open UploadProfilePicActivity
         imageView =view.findViewById(R.id.profileimg);
+
+
+
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -61,8 +70,6 @@ public class profileFragment extends Fragment {
                 startActivity(intent);
             }
         });
-        authProfile = FirebaseAuth.getInstance();
-        FirebaseUser firebaseUser = authProfile.getCurrentUser();
         if (user == null) {
             Intent intent = new Intent(requireContext(), Login.class);
             startActivity(intent);
@@ -95,6 +102,15 @@ public class profileFragment extends Fragment {
                     String division = dataSnapshot.child("division").getValue(String.class);
                     String district = dataSnapshot.child("district").getValue(String.class);
                     String dob = dataSnapshot.child("dob").getValue(String.class);
+                    String profileUrl=dataSnapshot.child("userProfileImage").getValue(String.class);
+                    User user=dataSnapshot.getValue(User.class);
+
+
+
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("userName", userName);
+                    editor.putString("userProfileUrl",user.getUserProfileImage());
+                    editor.apply();
 
                     // Set user name to userTextView instead of countryTextView
                     if (userName != null) {
@@ -108,6 +124,16 @@ public class profileFragment extends Fragment {
                     }
                     if (dob != null) {
                         dobTextView.setText(dob);
+                    }
+
+                    if(user.getUserProfileImage()!=null){
+
+                        Glide.with(requireActivity())
+                                .load(user.getUserProfileImage())
+                                .centerCrop()
+                                .placeholder(R.drawable.ic_user_place_holder)
+                                .into(imageView);
+
                     }
                 }
             }

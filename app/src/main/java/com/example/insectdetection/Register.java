@@ -1,4 +1,5 @@
 package com.example.insectdetection;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
@@ -19,8 +20,12 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 public class Register extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener {
 
@@ -72,7 +77,6 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
         editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         editTextUserName = findViewById(R.id.userName);
-//        editTextCountry = findViewById(R.id.inputTV);
         buttonReg = findViewById(R.id.btnRegister);
         progressBar = findViewById(R.id.progressBar);
         textView = findViewById(R.id.loginNow);
@@ -88,7 +92,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
 
         buttonReg.setOnClickListener(view -> {
             progressBar.setVisibility(View.VISIBLE);
-            String email, userName, password, division,district, Dob;
+            String email, userName, password, division, district, Dob;
             email = String.valueOf(editTextEmail.getText());
             password = String.valueOf(editTextPassword.getText());
             division = String.valueOf(divisionSpinner.getSelectedItem());
@@ -103,62 +107,83 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
                 return;
             }
 
-//            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(userName) || TextUtils.isEmpty(password) || TextUtils.isEmpty(country) || TextUtils.isEmpty(Dob)) {
-//                Toast.makeText(Register.this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
-//                progressBar.setVisibility(View.GONE);
-//                return;
-//            }
+            // Check if any field is empty
+            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(userName) || TextUtils.isEmpty(password) || TextUtils.isEmpty(Dob)) {
+                Toast.makeText(Register.this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                return;
+            }
 
-            mAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            FirebaseUser currentUser = mAuth.getCurrentUser();
-
-                            currentUser.sendEmailVerification().addOnCompleteListener(emailVerificationTask -> {
-                                Toast.makeText(Register.this, "Verification email sent. Please verify your email address.", Toast.LENGTH_LONG).show();
-
-                                if (emailVerificationTask.isSuccessful()) {
-                                    // Save user data to Realtime Database
-                                    User user = new User(userName, email, division, district, Dob);
-                                    DatabaseReference usersRef = FirebaseDatabase.getInstance("https://insectdetection-c56d4-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
-
-                                    usersRef.child(currentUser.getUid()).setValue(user)
-                                            .addOnSuccessListener(aVoid -> {
-                                                progressBar.setVisibility(View.GONE);
-                                                Toast.makeText(Register.this, "Account Created.", Toast.LENGTH_SHORT).show();
-
-                                                // Check if email is verified
-                                                if (currentUser.isEmailVerified()) {
-                                                    // Redirect to home page only after email verification
-                                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                                                    startActivity(intent);
-                                                    finish();
-                                                } else {
-                                                    Toast.makeText(Register.this, "Please verify your email address.", Toast.LENGTH_SHORT).show();
-                                                }
-                                            })
-                                            .addOnFailureListener(e -> {
-                                                progressBar.setVisibility(View.GONE);
-                                                Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
-                                                Log.e("RealtimeDatabase", "Failed to add user data: " + e.getMessage());
-                                            });
-
-                                } else {
-                                    Toast.makeText(Register.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
-                                    Log.e("EmailVerification", "Failed to send verification email: " + emailVerificationTask.getException().getMessage());
-                                }
-                            });
-
-
-                        } else {
-                            progressBar.setVisibility(View.GONE);
-                            Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
-                            Log.e("AuthenticationError", "Authentication failed: " + task.getException().getMessage());
-                        }
-                    });
-
-
+            // Check username uniqueness
+            checkUsernameUniqueness(userName, email, password, division, district, Dob);
         });
+    }
+
+    private void checkUsernameUniqueness(final String userName, final String email, final String password, final String division, final String district, final String Dob) {
+        DatabaseReference usersRef = db.getReference("usernames");
+        Query usernameQuery = usersRef.orderByChild("username").equalTo(userName);
+        usernameQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    Toast.makeText(Register.this, "Username is already taken", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                } else {
+                    // Username is unique, proceed with registration
+                    registerUser(email, password, division, district, Dob, userName);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("FirebaseDatabase", "Error checking username uniqueness", databaseError.toException());
+                Toast.makeText(Register.this, "Error checking username uniqueness", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void registerUser(String email, String password, String division, String district, String Dob, String userName) {
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser currentUser = mAuth.getCurrentUser();
+                        currentUser.sendEmailVerification().addOnCompleteListener(emailVerificationTask -> {
+                            Toast.makeText(Register.this, "Verification email sent. Please verify your email address.", Toast.LENGTH_LONG).show();
+                            if (emailVerificationTask.isSuccessful()) {
+                                // Save user data to Realtime Database
+                                User user = new User(userName, email, division, district, Dob, null);
+                                DatabaseReference usersRef = db.getReference("users");
+                                usersRef.child(currentUser.getUid()).setValue(user)
+                                        .addOnSuccessListener(aVoid -> {
+                                            progressBar.setVisibility(View.GONE);
+                                            Toast.makeText(Register.this, "Account Created.", Toast.LENGTH_SHORT).show();
+                                            // Check if email is verified
+                                            if (currentUser.isEmailVerified()) {
+                                                // Redirect to home page only after email verification
+                                                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                                startActivity(intent);
+                                                finish();
+                                            } else {
+                                                Toast.makeText(Register.this, "Please verify your email address.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            progressBar.setVisibility(View.GONE);
+                                            Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
+                                            Log.e("RealtimeDatabase", "Failed to add user data: " + e.getMessage());
+                                        });
+                            } else {
+                                Toast.makeText(Register.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
+                                Log.e("EmailVerification", "Failed to send verification email: " + emailVerificationTask.getException().getMessage());
+                            }
+                        });
+                    } else {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(Register.this, "Failed to create account.", Toast.LENGTH_SHORT).show();
+                        Log.e("AuthenticationError", "Authentication failed: " + task.getException().getMessage());
+                    }
+                });
     }
 
     @Override
@@ -195,12 +220,11 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
             districtSpinner.setAdapter(districtAdapter);
         }
     }
+
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
         // Handle the case where nothing is selected in the spinner
     }
-
-
 
     @Override
     public void onClick(View v) {

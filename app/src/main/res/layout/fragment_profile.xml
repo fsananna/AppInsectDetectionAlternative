@@ -59,13 +59,15 @@
             android:layout_marginStart="110dp"
             >
 
-            <ImageView
+
+
+            <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/profileimg"
                 android:layout_width="141dp"
                 android:layout_height="143dp"
-                app:srcCompat="@drawable/boy_avatar"
-
-                />
+                android:contentDescription="@string/image_contentDescription"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/boy_avatar" />
 
         </LinearLayout>
 

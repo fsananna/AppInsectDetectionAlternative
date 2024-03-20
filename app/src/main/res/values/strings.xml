@@ -55,4 +55,9 @@
     <string name="enter_city_name">Enter City Name</string>
     <string name="enter_country_code_optional">Enter Country Code (Optional)</string>
     <string name="get">Get</string>
+    <string name="load_more">Load More</string>
+    <string name="take_picture">Take Picture</string>
+    <string name="launch_gallery">Launch Gallery</string>
+    <string name="classified_as">Classified as:</string>
+    <string name="confidences">Confidences:</string>
 </resources>

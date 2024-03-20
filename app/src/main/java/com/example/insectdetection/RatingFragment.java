@@ -1,6 +1,7 @@
 package com.example.insectdetection;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,6 +38,8 @@ import java.util.function.Consumer;
 public class RatingFragment extends Fragment implements CommentAdapter.OnClickListener {
 
     private SharedPreferences sharedPreferences;
+
+
     private DatabaseReference commentsRef;
     private CommentAdapter commentAdapter;
     private ArrayList<Comments> mCommentList = new ArrayList<>();
@@ -57,6 +60,8 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         ratingsRef = db.getReference("ratings");
 
         getAllComments();
+        sharedPreferences = getActivity().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+
 
         // Initialize TextView to display average rating
         averageRatingTextView = view.findViewById(R.id.average_rating_textview);
@@ -188,8 +193,14 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
             long currentTime = new Date().getTime();
             Toast.makeText(getContext(), commentText, Toast.LENGTH_SHORT).show();
 
-            //যদি ইউজার থেকে নাম আর প্রোফাইল নিস ,তখন এখানে আপডেট করিস ।না হয় সব কমেন্ট অন্যানা করবে ।
-            Comments instanceOfComment = new Comments(commentText, "Annana", currentTime, "profileUri");
+
+            String profileUrl = sharedPreferences.getString("userProfileUrl", "");
+
+            // Retrieve profile name from SharedPreferences
+            String userName = sharedPreferences.getString("userName", "");
+
+
+            Comments instanceOfComment = new Comments(commentText, userName, currentTime, profileUrl);
             mCommentList.add(instanceOfComment);
             comment.setText("");
             commentAdapter.notifyDataSetChanged();

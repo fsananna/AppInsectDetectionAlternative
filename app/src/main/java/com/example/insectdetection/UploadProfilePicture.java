@@ -1,13 +1,11 @@
 package com.example.insectdetection;
 
-import android.Manifest;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -16,28 +14,32 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.squareup.picasso.Picasso;
+
+import java.util.UUID;
 
 public class UploadProfilePicture extends AppCompatActivity {
 
+    private static final int PICK_IMAGES_REQUEST = 1;
     private ProgressBar progressBar;
     private ImageView imageViewUploadPic;
-    private FirebaseAuth authProfile;
     private StorageReference storageReference;
-    private FirebaseUser firebaseUser;
-    private static final int PICK_IMAGE_REQUEST = 1;
-    private Uri uriImage;
-    private static final int STORAGE_PERMISSION_REQUEST_CODE = 100;
+    private Uri imageUri;
+    String userId ;
+    FirebaseDatabase db = FirebaseDatabase.getInstance("https://insectdetection-c56d4-default-rtdb.asia-southeast1.firebasedatabase.app/") ;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,120 +54,101 @@ public class UploadProfilePicture extends AppCompatActivity {
         Button buttonUploadPic = findViewById(R.id.upload_pic_button);
         progressBar = findViewById(R.id.progessBar);
         imageViewUploadPic = findViewById(R.id.imageView_profile_pic);
-
-        authProfile = FirebaseAuth.getInstance();
-        firebaseUser = authProfile.getCurrentUser();
-
-        storageReference = FirebaseStorage.getInstance().getReference("DisplayPics");
-
-        // Check for storage permission
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted, request it
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    STORAGE_PERMISSION_REQUEST_CODE);
-        }
-
-        Uri uri = firebaseUser.getPhotoUrl();
-
-        // set User's current dp in imageview (if uploaded already)
-        if (uri != null) {
-            Picasso.get().load(uri).into(imageViewUploadPic);
-        }
-
-        // choosing image to upload
+        storageReference = FirebaseStorage.getInstance().getReference().child("DisplayPics");
+        userId= FirebaseAuth.getInstance().getCurrentUser().getUid();
         buttonUploadPicChoose.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                openFileChooser();
+            public void onClick(View view) {
+                openImagePicker();
             }
         });
-
-        // upload image
         buttonUploadPic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                progressBar.setVisibility(View.VISIBLE);
-                uploadPic();
+                if (imageUri != null) {
+                    saveImageStorage(imageUri);
+                } else {
+                    Toast.makeText(UploadProfilePicture.this, "Please select an image", Toast.LENGTH_SHORT).show();
+                }
             }
         });
+
     }
 
-    private void openFileChooser() {
+
+    private void openImagePicker() {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGES_REQUEST);
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            uriImage = data.getData();
-            imageViewUploadPic.setImageURI(uriImage);
+        if (requestCode == PICK_IMAGES_REQUEST && resultCode == RESULT_OK && data != null) {
+            imageUri = data.getData();
+            imageViewUploadPic.setImageURI(imageUri);
         }
     }
 
-    private void uploadPic() {
-        if (uriImage != null) {
-            // save the image with vid of the currently logged user
-            FirebaseUser currentUser = authProfile.getCurrentUser();
 
-            if (currentUser != null) {
-                StorageReference fileReference = storageReference.child(currentUser.getUid() + "." + getFileExtension(uriImage));
 
-                // upload profile pic to storage
-                fileReference.putFile(uriImage).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+    private void saveImageStorage(Uri imageUri) {
+        // Show the progress bar
+        progressBar.setVisibility(View.VISIBLE);
+
+        storageReference.putFile(imageUri).addOnSuccessListener(taskSnapshot -> {
+            storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
+                Toast.makeText(UploadProfilePicture.this, "Image uploaded", Toast.LENGTH_SHORT).show();
+                String imageUrl = uri.toString();
+
+                updateProfileURL(userId,imageUrl);
+
+                // Hide the progress bar
+                progressBar.setVisibility(View.GONE);
+
+                // Navigate to ProfileActivity
+                Intent intent = new Intent(UploadProfilePicture.this, profileFragment.class);
+                startActivity(intent);
+                finish(); // Finish the current activity to prevent going back to it on back press
+            }).addOnFailureListener(e -> {
+                Toast.makeText(UploadProfilePicture.this, "Failed to get image URL", Toast.LENGTH_SHORT).show();
+                // Hide the progress bar
+                progressBar.setVisibility(View.GONE);
+            });
+        }).addOnFailureListener(e -> {
+            Toast.makeText(UploadProfilePicture.this, "Image uploading failed!", Toast.LENGTH_SHORT).show();
+            // Hide the progress bar
+            progressBar.setVisibility(View.GONE);
+        });
+    }
+
+
+
+
+
+    private void updateProfileURL(String userId, String newProfileURL) {
+
+        db.getReference("users")
+                .child(userId).child("userProfileImage").setValue(newProfileURL)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                Uri downloadUri = uri;
-                                firebaseUser = authProfile.getCurrentUser();
-
-                                // finally set the display image of the user to upload
-                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder().setPhotoUri(
-                                        downloadUri).build();
-                                firebaseUser.updateProfile(profileUpdates);
-                            }
-                        });
-                        progressBar.setVisibility(View.GONE);
-                        Toast.makeText(UploadProfilePicture.this, "Uploaded successfully", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(UploadProfilePicture.this, profileFragment.class);
-                        startActivity(intent);
-                        finish();
+                    public void onSuccess(Void aVoid) {
+                        // Profile URL updated successfully
+                        Log.d("Firebase", "Profile URL updated successfully");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Failed to update profile URL
+                        Log.e("Firebase", "Failed to update profile URL: " + e.getMessage());
                     }
                 });
-            } else {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(UploadProfilePicture.this, "No file selected", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    // File extension method
-    private String getFileExtension(Uri uri) {
-        ContentResolver cR = getContentResolver();
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        return mime.getExtensionFromMimeType(cR.getType(uri));
-    }
-
-    // Permission request result
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, proceed with file upload
-                uploadPic();
-            } else {
-                // Permission denied, show a message or handle accordingly
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 }
+
+
+

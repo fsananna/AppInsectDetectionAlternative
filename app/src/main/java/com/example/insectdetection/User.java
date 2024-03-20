@@ -8,6 +8,7 @@ public class User {
     private String division;
     private String district;
     private String Dob;
+    private String userProfileImage ;
 
     private String userName;
     // Default constructor (required for Firebase)
@@ -15,16 +16,23 @@ public class User {
     }
 
     // Parameterized constructor
-    public User(String userName,String email, String division,String district, String dob ) {
+    public User(String userName,String email, String division,String district, String dob,String userProfileImage ) {
         this.userName= userName;
         this.email = email;
         this.division = division;
         this.district = district;
         this.Dob = dob;
+        this.userProfileImage=userProfileImage ;
 
     }
 
+    public String getUserProfileImage() {
+        return userProfileImage;
+    }
 
+    public void setUserProfileImage(String userProfileImage) {
+        this.userProfileImage = userProfileImage;
+    }
 
     // Getters and setters
     public String getUserName() {
