@@ -141,7 +141,7 @@ public class HomeFragment extends Fragment {
                 }
             }
 
-            String[] classes = {"Fruit Flies", "Africanized Honey Bees (Killer Bees)", "Spider Mites", "Thrips", "Weevil", "Wasp", "Snail", "Slug", "Moth", "Grasshopper", "Earwig","Earthworms","Caterpillar","Beetle","Bees","Ants"};
+            String[] classes = { "Weevil", "Wasp", "Snail", "Slug", "Moth", "Grasshopper", "Earwig","Earthworms","Caterpillar","Beetle","Bees","Ants"};
             result.setText(classes[maxPos]);
 
             // Releases model resources if no longer used.

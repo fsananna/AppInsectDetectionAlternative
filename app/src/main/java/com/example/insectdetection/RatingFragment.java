@@ -30,6 +30,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
+
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,6 +49,11 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
     private DatabaseReference ratingsRef;
     private TextView averageRatingTextView;
 
+    private int currentPage=1 ;
+    private int startPosition = 0;
+    private int commentsPerPage = 5 ;
+    private int endPosition = 4;
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -59,7 +66,7 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         commentsRef = db.getReference("comments");
         ratingsRef = db.getReference("ratings");
 
-        getAllComments();
+        //getAllComments();
         sharedPreferences = getActivity().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
 
 
@@ -78,6 +85,19 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         FloatingActionButton postComment = view.findViewById(R.id.post_comment);
         comment = view.findViewById(R.id.comment);
 
+
+        // Next button click listener
+        Button nextButton = view.findViewById(R.id.nextButton);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (startPosition < mCommentList.size() - 1) { // Check if there are more comments to show
+                    startPosition += 5; // Increment end position by 5
+                    loadComments();
+                }
+            }
+        });
+
         postComment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -85,7 +105,7 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
             }
         });
 
-        listenForCommentUpdates(updatedCommentList -> {
+        listenForCommentUpdates(5,0,updatedCommentList -> {
             updateCommentListUI(updatedCommentList);
         });
 
@@ -139,6 +159,7 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
     }
 
 
+
     private void calculateAndDisplayAverageRating() {
         ratingsRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -163,26 +184,34 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         });
     }
 
-    private void listenForCommentUpdates(Consumer<ArrayList<Comments>> callback) {
-        commentsRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ArrayList<Comments> updatedCommentList = new ArrayList<>();
-                for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {
-                    Comments comment = commentSnapshot.getValue(Comments.class);
-                    if (comment != null) {
-                        updatedCommentList.add(comment);
-                    }
-                }
-                callback.accept(updatedCommentList);
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle onCancelled event if needed
-            }
-        });
+    //লিমিট দেওয়া কয়টা করে কমেন্ট নিয়ে আসবে তা
+    private void listenForCommentUpdates(int limit, int startPosition, Consumer<ArrayList<Comments>> callback) {
+
+        commentsRef.orderByKey()
+                .startAt(String.valueOf(startPosition))
+                .limitToFirst(limit)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        ArrayList<Comments> updatedCommentList = new ArrayList<>();
+                        for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {
+                            Comments comment = commentSnapshot.getValue(Comments.class);
+                            if (comment != null) {
+                                updatedCommentList.add(comment);
+                            }
+                        }
+                        callback.accept(updatedCommentList);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        // Handle onCancelled
+
+                    }
+                });
     }
+
 
 
     @SuppressLint("NotifyDataSetChanged")
@@ -226,27 +255,9 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
                 });
     }
 
-    private void getAllComments() {
-        commentsRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                mCommentList.clear(); // Clear the existing list before adding new comments
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Comments comment = snapshot.getValue(Comments.class);
-                    if (comment != null) {
-                        mCommentList.add(comment);
-                    }
-                }
-                commentAdapter.notifyDataSetChanged(); // Notify the adapter that the dataset has changed
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle any errors that may occur
-                Toast.makeText(getContext(), "Failed to retrieve comments: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+
+
 
     @Override
     public void onLikeClick(int position, TextView likeCountTextView, ImageButton likeButton) {
@@ -329,6 +340,31 @@ public class RatingFragment extends Fragment implements CommentAdapter.OnClickLi
         mCommentList.addAll(updatedCommentList);
         commentAdapter.notifyDataSetChanged();
     }
+
+
+
+    /* এখানেই pagination এর কাজ হচ্ছে । currentPage এর মান বাড়াচ্ছি প্রতিবার শুধু আর তা পুরনো কমেন্ট এর সাথে যোগ করে স্ক্রিনে দেখাচ্ছি
+     */
+
+    private void loadComments() {
+        startPosition = (currentPage - 1) * commentsPerPage;
+        listenForCommentUpdates(commentsPerPage, startPosition, newComments -> {
+
+            if (!newComments.isEmpty()) {
+                mCommentList.addAll(newComments);
+                commentAdapter.notifyDataSetChanged();
+                currentPage++;
+            } else {
+                Toast.makeText(getContext(), "No more comments to load", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+
+
+
+
 
 
 

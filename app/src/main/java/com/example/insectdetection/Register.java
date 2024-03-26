@@ -114,10 +114,23 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
                 return;
             }
 
+            // Check email validity
+            if (!isValidEmail(email)) {
+                Toast.makeText(Register.this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                return;
+            }
             // Check username uniqueness
             checkUsernameUniqueness(userName, email, password, division, district, Dob);
         });
+
     }
+    private boolean isValidEmail(String email) {
+        // Regular expression for email validation
+        String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
+        return email.matches(emailPattern);
+    }
+
 
     private void checkUsernameUniqueness(final String userName, final String email, final String password, final String division, final String district, final String Dob) {
         DatabaseReference usersRef = db.getReference("usernames");

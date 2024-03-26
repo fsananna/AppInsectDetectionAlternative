@@ -60,4 +60,6 @@
     <string name="launch_gallery">Launch Gallery</string>
     <string name="classified_as">Classified as:</string>
     <string name="confidences">Confidences:</string>
+    <string name="prev">Prev</string>
+    <string name="next">Next</string>
 </resources>
