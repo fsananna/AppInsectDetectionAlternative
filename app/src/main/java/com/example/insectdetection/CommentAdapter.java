@@ -1,5 +1,5 @@
 package com.example.insectdetection;
-
+// responsible for managing and displaying a list of comments in a RecyclerView.
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,7 +44,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {//called to bind the data to a ViewHolder at a given position.
         if (holder instanceof CommentViewHolder) {
             ((CommentViewHolder) holder).bind(commentList.get(position));
         }

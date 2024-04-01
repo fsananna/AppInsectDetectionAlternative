@@ -1,5 +1,6 @@
 package com.example.insectdetection;
 
+//This Java class Comments represents a model for comments in an application.
 import java.util.ArrayList;
 
 public class Comments {

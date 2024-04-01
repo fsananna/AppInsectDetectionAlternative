@@ -1,6 +1,9 @@
 package com.example.insectdetection;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -31,7 +34,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
 
     Spinner divisionSpinner, districtSpinner;
     ArrayAdapter<CharSequence> divisionAdapter, districtAdapter;
-    EditText editTextEmail, editTextPassword, editTextCountry, editTextUserName;
+    EditText editTextEmail, editTextPassword,  editTextUserName;
     Button buttonReg;
     FirebaseAuth mAuth;
     ProgressBar progressBar;
@@ -41,6 +44,9 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
 
     private TextView registerDate;
     private DatePickerDialog datePickerDialog;
+    private Handler handler = new Handler();
+    private Runnable usernameCheckRunnable;
+    private static final long USERNAME_CHECK_DELAY = 1000;
 
     @Override
     public void onStart() {
@@ -57,6 +63,8 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+        editTextUserName = findViewById(R.id.userName);
+        editTextUserName.addTextChangedListener(usernameTextWatcher);
         // Initialize spinners
         divisionSpinner = findViewById(R.id.divisionSpinner);
         districtSpinner = findViewById(R.id.districtSpinner);
@@ -81,6 +89,8 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
         progressBar = findViewById(R.id.progressBar);
         textView = findViewById(R.id.loginNow);
         registerDate = findViewById(R.id.idBtnPickDate);
+
+
 
         textView.setOnClickListener(v -> {
             Intent intent = new Intent(getApplicationContext(), Login.class);
@@ -124,6 +134,58 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
             checkUsernameUniqueness(userName, email, password, division, district, Dob);
         });
 
+    }
+    private TextWatcher usernameTextWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            // Not needed for this implementation
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            // Not needed for this implementation
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            // Cancel previous check if any
+            if (usernameCheckRunnable != null) {
+                handler.removeCallbacks(usernameCheckRunnable);
+            }
+
+            // Schedule a new check after USERNAME_CHECK_DELAY milliseconds
+            usernameCheckRunnable = () -> {
+                String userName = s.toString().trim();
+                if (!TextUtils.isEmpty(userName)) {
+                    checkUsernameAvailability(userName);
+                }
+            };
+            handler.postDelayed(usernameCheckRunnable, USERNAME_CHECK_DELAY);
+        }
+    };
+    private void checkUsernameAvailability(final String userName) {
+        DatabaseReference usersRef = db.getReference("users");
+        Query usernameQuery = usersRef.orderByChild("userName").equalTo(userName);
+        usernameQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    // Username is not available
+                    // You can provide visual feedback to the user here
+                    Toast.makeText(Register.this, "Username is already taken", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Username is available
+                    // You can provide visual feedback to the user here
+                    Toast.makeText(Register.this, "Username is available", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("FirebaseDatabase", "Error checking username availability", databaseError.toException());
+                Toast.makeText(Register.this, "Error checking username availability", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
     private boolean isValidEmail(String email) {
         // Regular expression for email validation
