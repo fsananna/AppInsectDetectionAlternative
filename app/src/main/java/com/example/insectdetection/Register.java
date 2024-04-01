@@ -173,10 +173,39 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
                     // Username is not available
                     // You can provide visual feedback to the user here
                     Toast.makeText(Register.this, "Username is already taken", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
                 } else {
-                    // Username is available
-                    // You can provide visual feedback to the user here
-                    Toast.makeText(Register.this, "Username is available", Toast.LENGTH_SHORT).show();
+                    // Username is available, proceed with registration
+                    // Check if other fields are also filled
+                    String email = String.valueOf(editTextEmail.getText());
+                    String password = String.valueOf(editTextPassword.getText());
+                    String division = String.valueOf(divisionSpinner.getSelectedItem());
+                    String district = String.valueOf(districtSpinner.getSelectedItem());
+                    String Dob = String.valueOf(registerDate.getText());
+
+                    // Check if division and district are selected
+                    if (TextUtils.isEmpty(division) || TextUtils.isEmpty(district)) {
+                        Toast.makeText(Register.this, "Please select division and district", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    // Check if any field is empty
+                    if (TextUtils.isEmpty(email) || TextUtils.isEmpty(userName) || TextUtils.isEmpty(password) || TextUtils.isEmpty(Dob)) {
+                        Toast.makeText(Register.this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    // Check email validity
+                    if (!isValidEmail(email)) {
+                        Toast.makeText(Register.this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    // Proceed with registration
+                    registerUser(email, password, division, district, Dob, userName);
                 }
             }
 
@@ -184,9 +213,11 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
             public void onCancelled(DatabaseError databaseError) {
                 Log.e("FirebaseDatabase", "Error checking username availability", databaseError.toException());
                 Toast.makeText(Register.this, "Error checking username availability", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
             }
         });
     }
+
     private boolean isValidEmail(String email) {
         // Regular expression for email validation
         String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
@@ -195,8 +226,8 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
 
 
     private void checkUsernameUniqueness(final String userName, final String email, final String password, final String division, final String district, final String Dob) {
-        DatabaseReference usersRef = db.getReference("usernames");
-        Query usernameQuery = usersRef.orderByChild("username").equalTo(userName);
+        DatabaseReference usersRef = db.getReference("users");
+        Query usernameQuery = usersRef.orderByChild("userName").equalTo(userName);
         usernameQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -249,6 +280,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
                                             Log.e("RealtimeDatabase", "Failed to add user data: " + e.getMessage());
                                         });
                             } else {
+                                progressBar.setVisibility(View.GONE);
                                 Toast.makeText(Register.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
                                 Log.e("EmailVerification", "Failed to send verification email: " + emailVerificationTask.getException().getMessage());
                             }
@@ -260,6 +292,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener,
                     }
                 });
     }
+
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
