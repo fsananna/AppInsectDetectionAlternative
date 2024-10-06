@@ -49,6 +49,7 @@ public class HomeFragment extends Fragment {
 
         ImageButton mapButton = rootView.findViewById(R.id.map_button);
         ImageButton weatherButton = rootView.findViewById(R.id.weather_button);
+        ImageButton countryButton = rootView.findViewById(R.id.country_button);
         camera = rootView.findViewById(R.id.button);
         gallery = rootView.findViewById(R.id.button2);
 
@@ -59,6 +60,12 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 openMapActivity();
+            }
+        });
+        countryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openCountryActivity();
             }
         });
 
@@ -96,7 +103,10 @@ public class HomeFragment extends Fragment {
         Intent intent = new Intent(requireContext(), Map.class);
         startActivity(intent);
     }
-
+private  void openCountryActivity(){
+        Intent intent = new Intent(requireContext(),Country.class);
+        startActivity(intent);
+}
     private void openWeatherActivity() {
         Intent intent = new Intent(requireContext(), Weather.class); // Replace WeatherActivity with the actual name of your Weather activity
         startActivity(intent);
