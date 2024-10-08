@@ -62,4 +62,8 @@
     <string name="confidences">Confidences:</string>
     <string name="prev">Prev</string>
     <string name="next">Next</string>
+    <string name="countries">Countries</string>
+    <string name="find_all_the_countries_information">Find all the Countries Information!</string>
+    <string name="country_name">Country Name</string>
+    <string name="country_capital">Country Capital</string>
 </resources>

@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-    id ("com.apollographql.apollo")
+    id("com.apollographql.apollo")
 }
 
 android {
@@ -15,8 +15,17 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments(
+                        mapOf(
+                                "apollo.schema.file" to "$projectDir/src/main/graphql/com/example/insectdetection/schema.json"
+                        )
+                )
+            }
+        }
     }
 
     buildTypes {
@@ -33,11 +42,33 @@ android {
         viewBinding = true
         mlModelBinding = true
     }
+
+    apollo {
+        service("countries") {
+            sourceFolder.set("com/example/insectdetection")
+            rootPackageName.set("com.example.insectdetection")
+            schemaFile.set(file("src/main/graphql/com/example/insectdetection/schema.graphqls"))
+            introspection {
+                endpointUrl.set("https://countries.trevorblades.com/graphql")
+            }
+        }
+    }
+
 }
 
 dependencies {
-    implementation ("com.apollographql.apollo:apollo-runtime:2.4.6")
-    implementation ("com.apollographql.apollo:apollo-coroutines-support:2.4.6")
+
+    implementation("com.apollographql.apollo:apollo-runtime:2.5.9") // For Apollo Client
+    implementation("com.apollographql.apollo:apollo-rx2-support:2.5.9") // For RxJava support
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1") // RxJava for Android
+
+
+    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation ("io.reactivex.rxjava2:rxjava:2.2.20")
+    implementation ("com.apollographql.apollo:apollo-runtime:2.5.9")
+
+    implementation ("com.apollographql.apollo:apollo-coroutines-support:2.5.9")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
@@ -68,3 +99,4 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("com.squareup.retrofit2:converter-scalars:2.6.4")
 }
+
